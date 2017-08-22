@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container">
+  <div class="jumbotron">
+  <h1>New Sauce</h1>
+    <form action="#" method = 'post'>
+      {{ csrf_token }}
+      <div class="form-group">
+        <label for="InputName">Name</label>
+        <input type="text"  size="30" class="form-control" name = "name" placeholder="Name">
+      </div>
+      <input class = "btn btn-primary" type='submit' value='Create'>
+
+    </form>
+    <a class = "btn btn-default" href = '{{url_for('showCatalogs')}}'> Cancel </a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container">
+  <div class = 'jumbotron'>
+
+  <div class="page-header">
+    <h1>{{ catalog.name }} List</h1>
+  </div>
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+
+      <ul>
+      {% for message in messages %}
+          <li> <strong> {{ message }} </strong> </li>
+      {% endfor %}
+      </ul>
+      {% endif %}
+  {% endwith %}
+
+  {% if items !=[] %}
+
+
+  </br></br>
+
+  <ul>
+    {% for i in items %}
+    <li class="list-group-item" id = "item-list">
+    <p>{{i.picture}}</p>
+
+
+    <h2>Name: {{i.name}}</h2>
+
+
+    <p>{{i.description}}</p>
+
+
+    <p>Price: {{i.price}}</p>
+    {% if 'username' in session and creator.user_id %}
+    <a class = "btn btn-small btn-warning" href='{{url_for('editCatalogItem', catalog_id = catalog.id, catalog_item_id=i.id ) }}' >Edit</a>
+
+    <a class = "btn btn-small btn-danger" href='{{url_for('deleteCatalogItem', catalog_id = catalog.id, catalog_item_id=i.id ) }}' >Delete</a>
+    {% else %}
+		{% endif %}
+    </li>
+    </br>
+    {% endfor %}
+
+  </ul>
+    <br></br>
+    <a class = "btn btn-default" href="{{url_for('showCatalogs')}}">Back To Sauce List</a>
+    <a class = "btn btn-primary" href = "{{url_for('newCatalogItem', catalog_id = catalog.id )}}">Create New Item</a>
+  </div>
+</div>
+
+
+
+
+
+
+{% else %}
+<div class="container">
+  <p> No sauces created for this catalog <p>
+
+    <a class = "btn btn-primary" href = "{{url_for('newCatalogItem', catalog_id = catalog.id )}}">Create New Sauce Item</a>
+
+  </br>
+  <a class = "btn btn-default" href="{{url_for('showCatalogs')}}">Back To Sauce List</a>
+</div>
+{% endif %}
+
+<div class="container">
+
+
+
+</div>
+
+{% endblock %}
