@@ -12,6 +12,7 @@ import httplib2
 import json
 from flask import make_response
 import requests
+from functools import wraps
 
 app = Flask(__name__)
 
@@ -26,6 +27,15 @@ Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
+
+# Create login decorator
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'username' not in login_session:
+            return redirect('/login')
+        return f(*args, **kwargs)
+    return decorated_function
 
 # Create anti-forgery state token
 @app.route('/login')
@@ -79,8 +89,7 @@ def fbconnect():
     login_session['access_token'] = token
 
     # Get user picture
-    url = '''https://graph.facebook.com/v2.8/me/picture?access_
-            token=%s&redirect=0&height=200&width=200''' % token
+    url = 'https://graph.facebook.com/v2.8/me/picture?access_token=%s&redirect=0&height=200&width=200' % token
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
     data = json.loads(result)
@@ -144,7 +153,7 @@ def gconnect():
     url = ("https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s"
            % access_token)
     h = httplib2.Http()
-    result = json.loads(h.request(url, "GET")[1])
+    result = json.loads(h.request(url, "GET")[1].decode("utf8"))
     # If there was an error in the access token info, abort.
     if result.get('error') is not None:
         response = make_response(json.dumps(result.get('error')), 500)
@@ -296,9 +305,10 @@ def showCatalogs():
 
 # Create a new sauce catalog
 @app.route('/catalog/new/', methods=['GET', 'POST'])
+@login_required
 def newCatalog():
     if request.method == 'POST':
-        newCatalog = Catalog(name=request.form['name'])
+        newCatalog = Catalog(name=request.form['name'], user_id=login_session['user_id'])
         session.add(newCatalog)
         session.commit()
         return redirect(url_for('showCatalogs'))
@@ -308,10 +318,11 @@ def newCatalog():
 
 # Edit a sauce catalog
 @app.route('/catalog/<int:catalog_id>/edit/', methods=['GET', 'POST'])
+@login_required
 def editCatalog(catalog_id):
-
-    editedCatalog = session.query(
-        Catalog).filter_by(id=catalog_id).one()
+    editedCatalog = session.query(Catalog).filter_by(id=catalog_id).one()
+    if editedCatalog.user_id != login_session['user_id']:
+        return "<script>function authFunction() {alert('You are not authorized to edit this catalog.');}</script><body onload='authFunction()''>"
     if request.method == 'POST':
         if request.form['name']:
             editedCatalog.name = request.form['name']
@@ -322,14 +333,15 @@ def editCatalog(catalog_id):
 
 # Delete a sauce catalog
 @app.route('/catalog/<int:catalog_id>/delete/', methods=['GET', 'POST'])
+@login_required
 def deleteCatalog(catalog_id):
-    catalogToDelete = session.query(
-        Catalog).filter_by(id=catalog_id).one()
+    catalogToDelete = session.query(Catalog).filter_by(id=catalog_id).one()
+    if catalogToDelete.user_id != login_session['user_id']:
+        return "<script>function authFunction() {alert('You are not authorized to delete this catalog.');}</script><body onload='authFunction()''>"
     if request.method == 'POST':
         session.delete(catalogToDelete)
         session.commit()
-        return redirect(
-            url_for('showCatalogs', catalog_id=catalog_id))
+        return redirect(url_for('showCatalogs', catalog_id=catalog_id))
     else:
         return render_template(
             'deleteCatalog.html', catalog=catalogToDelete)
@@ -341,21 +353,21 @@ def deleteCatalog(catalog_id):
 def showItems(catalog_id):
     catalog = session.query(Catalog).filter_by(id=catalog_id).one()
     creator = getUserInfo(Catalog.user_id)
-    items = session.query(CatalogItem).filter_by(
-        catalog_id=catalog_id).all()
+    items = session.query(CatalogItem).filter_by(catalog_id=catalog_id).all()
     return render_template('sauceList.html', items=items, catalog=catalog,
                             creator=creator)
 
 
 # Create a new catalog item
-@app.route(
-    '/catalog/<int:catalog_id>/item/new/', methods=['GET', 'POST'])
+@app.route('/catalog/<int:catalog_id>/item/new/', methods=['GET', 'POST'])
+@login_required
 def newCatalogItem(catalog_id):
-    if 'username' not in login_session:
-        return redirect('/login')
+    catalog = session.query(Catalog).filter_by(id=catalog_id).one()
+    if login_session['user_id'] != catalog.user_id:
+        return "<script>function authFunction() {alert('You are not authorized to add to this catalog.');}</script><body onload='authFunction()''>"
     if request.method == 'POST':
         newItem = CatalogItem(name=request.form['name'], description=request.form[
-                           'description'], price=request.form['price'], catalog_id=catalog_id)
+                           'description'], price=request.form['price'], catalog_id=catalog_id, user_id=catalog.user_id)
         session.add(newItem)
         session.commit()
         flash("new sauce created!")
@@ -370,8 +382,12 @@ def newCatalogItem(catalog_id):
 # Edit a catalog item
 @app.route('/catalog/<int:catalog_id>/item/<int:catalog_item_id>/edit',
            methods=['GET', 'POST'])
+@login_required
 def editCatalogItem(catalog_id, catalog_item_id):
     editedItem = session.query(CatalogItem).filter_by(id=catalog_item_id).one()
+    catalog = session.query(Catalog).filter_by(id=catalog_id).one()
+    if login_session['user_id'] != catalog.user_id:
+        return "<script>function authFunction() {alert('You are not authorized to edit this item.');}</script><body onload='authFunction()''>"
     if request.method == 'POST':
         if request.form['name']:
             editedItem.name = request.form['name']
@@ -393,7 +409,11 @@ def editCatalogItem(catalog_id, catalog_item_id):
 # Delete a catalog item
 @app.route('/catalog/<int:catalog_id>/item/<int:catalog_item_id>/delete',
             methods=['GET', 'POST'])
+@login_required
 def deleteCatalogItem(catalog_id, catalog_item_id):
+    catalog = session.query(Catalog).filter_by(id=catalog_id).one()
+    if login_session['user_id'] != catalog.user_id:
+        return "<script>function authFunction() {alert('You are not authorized to delete this item.');}</script><body onload='authFunction()''>"
     itemToDelete = session.query(CatalogItem).filter_by(id=catalog_item_id).one()
     if request.method == 'POST':
         session.delete(itemToDelete)

@@ -2,18 +2,20 @@
 
 {% block content %}
 
+<div class="container">
 <h1> Edit Sauce Catalog </h1>
 
+  <div class="jumbotron">
+  <form action="{{ url_for('editCatalog',catalog_id = catalog.id)}}" method = 'post' id = "item-list">
+    {{csrf_token}}
+    <div class="form-group">
+      <label for="InputName">Name</label>
+      <input type="text"  size="30" class="form-control" name="name" placeholder="{{catalog.name}}">
+    </div>
 
-<form action="{{ url_for('editCatalog',catalog_id = catalog.id)}}" method = 'post' id = "item-list">
-  {{csrf_token}}
-
-  <div class="form-group">
-    <label for="InputName">Name</label>
-    <input type="text"  size="30" class="form-control" name="name" placeholder="{{catalog.name}}">
-  </div>
-
-   <input class = "btn btn-warning" type='submit' value='Edit'>
-   <a class = "btn btn-default" href = '{{url_for('showCatalogs')}}'> Cancel </a>
-
+     <input class = "btn btn-warning" type='submit' value='Edit'>
+     <a class = "btn btn-default" href = '{{url_for('showCatalogs')}}'> Cancel </a>
+   </form>
+   </div>
+</div>
 {% endblock %}

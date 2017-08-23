@@ -18,12 +18,9 @@ body {
   text-align: left;
 }
 
-.btn-default {
-  font-size: 1.5em;
-}
 
 .btn-primary {
-  font-size: 1.5em;
+  font-size: 1em;
 }
 
 #catalog-list {

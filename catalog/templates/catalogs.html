@@ -14,7 +14,7 @@
   {% for catalog in catalogs %}
 	<li class="list-group-item" id = "catalog-list">
     <a href = "{{url_for('showItems', catalog_id = catalog.id)}}"> <strong><h3>{{catalog.name}}</h3></strong></a>
-		{% if 'username' in session and creator == catalog.user_id %}
+		{% if 'username' in session and creator.id == catalog.user_id %}
     <p><a class = "btn btn-warning" href = "{{url_for('editCatalog',catalog_id = catalog.id)}}">Edit Sauce</a>
     <a class = "btn btn-danger" href = "{{url_for('deleteCatalog',catalog_id = catalog.id)}}">Delete Sauce</a> </p>
 	</li>
