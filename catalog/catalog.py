@@ -322,7 +322,8 @@ def newCatalog():
 def editCatalog(catalog_id):
     editedCatalog = session.query(Catalog).filter_by(id=catalog_id).one()
     if editedCatalog.user_id != login_session['user_id']:
-        return "<script>function authFunction() {alert('You are not authorized to edit this catalog.');}</script><body onload='authFunction()''>"
+        return '''<script>function authFunction() {alert('You are not authorized
+         to edit this catalog.');}</script><body onload='authFunction()''>'''
     if request.method == 'POST':
         if request.form['name']:
             editedCatalog.name = request.form['name']
@@ -337,7 +338,8 @@ def editCatalog(catalog_id):
 def deleteCatalog(catalog_id):
     catalogToDelete = session.query(Catalog).filter_by(id=catalog_id).one()
     if catalogToDelete.user_id != login_session['user_id']:
-        return "<script>function authFunction() {alert('You are not authorized to delete this catalog.');}</script><body onload='authFunction()''>"
+        return '''<script>function authFunction() {alert('You are not authorized
+         to delete this catalog.');}</script><body onload='authFunction()''>'''
     if request.method == 'POST':
         session.delete(catalogToDelete)
         session.commit()
@@ -364,7 +366,8 @@ def showItems(catalog_id):
 def newCatalogItem(catalog_id):
     catalog = session.query(Catalog).filter_by(id=catalog_id).one()
     if login_session['user_id'] != catalog.user_id:
-        return "<script>function authFunction() {alert('You are not authorized to add to this catalog.');}</script><body onload='authFunction()''>"
+        return '''<script>function authFunction() {alert('You are not authorized
+         to add to this catalog.');}</script><body onload='authFunction()''>'''
     if request.method == 'POST':
         newItem = CatalogItem(name=request.form['name'], description=request.form[
                            'description'], price=request.form['price'], catalog_id=catalog_id, user_id=catalog.user_id)
@@ -387,7 +390,8 @@ def editCatalogItem(catalog_id, catalog_item_id):
     editedItem = session.query(CatalogItem).filter_by(id=catalog_item_id).one()
     catalog = session.query(Catalog).filter_by(id=catalog_id).one()
     if login_session['user_id'] != catalog.user_id:
-        return "<script>function authFunction() {alert('You are not authorized to edit this item.');}</script><body onload='authFunction()''>"
+        return '''<script>function authFunction() {alert('You are not authorized
+         to edit this item.');}</script><body onload='authFunction()''>'''
     if request.method == 'POST':
         if request.form['name']:
             editedItem.name = request.form['name']
@@ -413,7 +417,8 @@ def editCatalogItem(catalog_id, catalog_item_id):
 def deleteCatalogItem(catalog_id, catalog_item_id):
     catalog = session.query(Catalog).filter_by(id=catalog_id).one()
     if login_session['user_id'] != catalog.user_id:
-        return "<script>function authFunction() {alert('You are not authorized to delete this item.');}</script><body onload='authFunction()''>"
+        return '''<script>function authFunction() {alert('You are not authorized
+         to delete this item.');}</script><body onload='authFunction()''>'''
     itemToDelete = session.query(CatalogItem).filter_by(id=catalog_item_id).one()
     if request.method == 'POST':
         session.delete(itemToDelete)
